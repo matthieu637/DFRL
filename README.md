@@ -44,9 +44,10 @@ python SOTO-ALF-CLDE.py
 python SOTO-ALF-CLDE.py 
 
 #SOTO with GGF in the fully decentralized scenario:
-python SOTO-ALF-CLDE.py 
+python SOTO-ALF-FD.py 
 
 #To change the environment, edit config.ini
+#to reproduce our experiments, check the hyperparameters directory and replace config.ini
 ```
 
 ## Cite
@@ -54,10 +55,10 @@ python SOTO-ALF-CLDE.py
 If you make use of this code, please cite:
 
 ```
-@misc{zimmer2020learning,
+@misc{zimmer2021learning,
       title={Learning Fair Policies in Decentralized Cooperative Multi-Agent Reinforcement Learning}, 
-      author={Matthieu Zimmer and Umer Siddique and Paul Weng},
-      year={2020},
+      author={Matthieu Zimmer and Claire Glanois and Umer Siddique and Paul Weng},
+      year={2021},
       eprint={2012.09421},
       archivePrefix={arXiv},
       primaryClass={cs.LG}

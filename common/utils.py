@@ -158,9 +158,6 @@ def default_config():
     config['agent']['meta_skip_etrace'] = 'true' #should be kept true because of the reward form
     config['agent']['fen_communication_round'] = '10'
 
-    #block
-    config['agent']['force_single_learned'] = 'false'
-
     config.read('config.ini')
     return config
 
