@@ -13,7 +13,6 @@ lr_actor = float(config['agent']['lr_actor'])
 meta_skip_etrace = str2bool(config['agent']['meta_skip_etrace'])
 communication_round = int(config['agent']['fen_communication_round'])
 env=make_env(config, normalize_inputs)
-env.toggle_compute_neighbors()
 
 n_agent=env.n_agent
 T = env.T
@@ -66,7 +65,6 @@ while i_episode<n_episode:
 	su = np.array(su)
 
 	obs = env.reset()
-	neighbors = env.neighbors()
 
 	done = False
 	while steps<max_steps and not done:
@@ -94,7 +92,6 @@ while i_episode<n_episode:
 			ep_actions[i].append(to_categorical(action[i],n_actions))
 
 		obs, rewards, done = env.step(action)
-		neighbors = env.neighbors()
 
 		su+=np.array(rewards)
 		score += sum(rewards)
@@ -106,11 +103,10 @@ while i_episode<n_episode:
 		for j in range(communication_round):
 			for i in range(n_agent):
 				s=0
-				(neigh, index) = neighbors[0][i], neighbors[1][i]
-				neigh = neigh[0:len(index)]
-				for k in neigh:
-					s+=avg[k]
-				avg[i]=(avg[i]*0.02+(avg[i]+s)/(len(index)+1)*0.98)+(np.random.rand()-0.5)*0.0001
+				for k in range(3):
+					m = np.random.randint(0, n_agent)
+					s+=avg[m]
+				avg[i]=(avg[i]*0.02+(avg[i]+s)/(3+1)*0.98)+(np.random.rand()-0.5)*0.0001
 		for i in range(n_agent):
 			#avg[i] = sum(u_bar)/len(u_bar) # u_bar/ n agent #forbidden in fully decentralized
 			if avg[i]!=0:
