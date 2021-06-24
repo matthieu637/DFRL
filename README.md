@@ -55,9 +55,10 @@ python SOTO-ALF-FD.py
 If you make use of this code, please cite:
 
 ```
-@misc{zimmer2021learning,
+@inproceedings{zimmer2021learning,
       title={Learning Fair Policies in Decentralized Cooperative Multi-Agent Reinforcement Learning}, 
       author={Matthieu Zimmer and Claire Glanois and Umer Siddique and Paul Weng},
+      booktitle = {International Conference on Machine Learning},
       year={2021},
       eprint={2012.09421},
       archivePrefix={arXiv},
