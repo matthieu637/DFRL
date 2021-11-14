@@ -11,6 +11,8 @@ import numpy as np
 from common.utils import RunningMeanStd
 from .env_sumo_traffic_signal import TrafficSignal
 
+# from ray.rllib.env.multi_agent_env import MultiAgentEnv
+# class Env(MultiAgentEnv):
 class Env():
     """
     SUMO Environment for Traffic Signal Control
@@ -87,10 +89,6 @@ class Env():
         self.max_green = max_green
         self.yellow_time = yellow_time
         self.run = 0
-
-        # Original
-        # self.observation_space = spaces.Box(low=np.zeros(self.num_green_phases + 1 + 2 * self.lanes_per_ts),
-        #                                     high=np.ones(self.num_green_phases + 1 + 2 * self.lanes_per_ts))
 
         self.input_size = self.num_green_phases + 1 + 2 * self.lanes_per_ts
         self.n_actions = self.num_green_phases
@@ -197,19 +195,17 @@ class Env():
 
         # observe new state and reward
         observation = self._get_obs()
-        reward = self._compute_rewards()
+        reward, waiting_times = self._compute_rewards()
         done = self.sim_step > self.sim_max_time
         self.last_reward = reward
-        self.rinfo += reward
+        self.rinfo += waiting_times
         if not self.doublereward:
             reward = np.array(reward).reshape(self.nD, -1).sum(axis=-1)
-        # self.metrics.append(self._compute_step_info())
 
         return observation, reward, done
 
     def _compute_rewards(self):
-        #print(np.array(R).reshape(9, -1).sum(axis=-1), self._waiting_time_reward())
-        return self._waiting_time_reward_double()
+        return self._waiting_time_reward_double2()
 
     # original
     def _waiting_time_reward(self):
@@ -235,9 +231,42 @@ class Env():
         self.last_measure2[self.n_agent:] = newR
 
         return rewards
+    
+    def _waiting_time_reward_double2(self):
+        rewards = np.zeros(18)
+        ts_wait = []
+        for ts in self.ts_ids:
+            ts_wait.append(self.traffic_signals[ts].get_waiting_time())
+        ts_wait=np.array(ts_wait)
+        newR1 = (ts_wait[:,0]+ts_wait[:,2])
+        rewards[0::2] = self.last_measure2[:self.n_agent] - newR1
+        self.last_measure2[:self.n_agent] = newR1
+
+        newR2 = (ts_wait[:, 1] + ts_wait[:, 3])
+        rewards[1::2] = self.last_measure2[self.n_agent:] - newR2
+        self.last_measure2[self.n_agent:] = newR2
+        newRmerged = np.concatenate((newR1,newR2))
+
+        return rewards, newRmerged
+    
+    def _waiting_time_reward_double3(self):
+        rewards = np.zeros(18)
+        ts_wait = []
+        for ts in self.ts_ids:
+            ts_wait.append(self.traffic_signals[ts].get_waiting_time())
+        ts_wait=np.array(ts_wait)
+        newR1 = (ts_wait[:,0]+ts_wait[:,2])
+        rewards[0::2] = - newR1
+        self.last_measure2[:self.n_agent] = newR1
+
+        newR2 = (ts_wait[:, 1] + ts_wait[:, 3])
+        rewards[1::2] = - newR2
+        self.last_measure2[self.n_agent:] = newR2
+
+        return rewards, -rewards
+    
 
     def _compute_step_info(self):
-        # breakpoint()
         return {
             'step_time': self.sim_step,
             'reward': np.array(self.last_reward).sum(),
@@ -253,10 +282,6 @@ class Env():
         self.fileresults.write(','.join(self.rinfo.flatten().astype('str')) + '\n')
         self.fileresults.flush()
         traci.close()
-
-        # df = pd.DataFrame(self.metrics)
-        # df.to_csv('metric_{}'.format(self.run) + '.csv', index=False)
-        # self.run += 1
 
     def render(self):
         pass
